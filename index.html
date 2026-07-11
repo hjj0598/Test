@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitLog 健身记录</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-panel">
+        <div class="brand">
+          <div class="brand-mark">F</div>
+          <div>
+            <p class="eyebrow">FitLog</p>
+            <h1>健身记录台</h1>
+          </div>
+        </div>
+
+        <div class="today-card">
+          <canvas id="pulseCanvas" aria-hidden="true"></canvas>
+          <div>
+            <p>今日状态</p>
+            <strong id="todayStatus">准备开练</strong>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="页面导航">
+          <a href="#record" class="active">记录训练</a>
+          <a href="#progress">进度趋势</a>
+          <a href="#history">训练历史</a>
+        </nav>
+
+        <div class="data-tools">
+          <button id="exportBtn" type="button" title="导出全部记录">导出</button>
+          <label class="import-btn" title="导入备份数据">
+            导入
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+        </div>
+      </aside>
+
+      <main>
+        <section class="topbar" aria-label="总览">
+          <div>
+            <p class="eyebrow">本周概览</p>
+            <h2 id="weekTitle">继续保持节奏</h2>
+          </div>
+          <button id="seedBtn" class="ghost-btn" type="button" title="生成演示记录">演示数据</button>
+        </section>
+
+        <section class="stats-grid" aria-label="统计数据">
+          <article class="metric">
+            <span>训练次数</span>
+            <strong id="statSessions">0</strong>
+            <small>本周</small>
+          </article>
+          <article class="metric">
+            <span>训练时长</span>
+            <strong id="statMinutes">0</strong>
+            <small>分钟</small>
+          </article>
+          <article class="metric">
+            <span>训练容量</span>
+            <strong id="statVolume">0</strong>
+            <small>kg 总量</small>
+          </article>
+          <article class="metric">
+            <span>连续打卡</span>
+            <strong id="statStreak">0</strong>
+            <small>天</small>
+          </article>
+        </section>
+
+        <div class="workspace">
+          <section id="record" class="panel record-panel" aria-labelledby="recordTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">新记录</p>
+                <h2 id="recordTitle">添加一次训练</h2>
+              </div>
+              <span id="formMode">新建</span>
+            </div>
+
+            <form id="workoutForm" autocomplete="off">
+              <input id="recordId" type="hidden" />
+              <div class="form-row two">
+                <label>
+                  日期
+                  <input id="dateInput" name="date" type="date" required />
+                </label>
+                <label>
+                  类型
+                  <select id="typeInput" name="type" required>
+                    <option value="力量">力量</option>
+                    <option value="有氧">有氧</option>
+                    <option value="拉伸">拉伸</option>
+                    <option value="综合">综合</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                训练内容
+                <input id="nameInput" name="name" type="text" placeholder="例如：胸肩推、5km 慢跑" required />
+              </label>
+
+              <div class="form-row three">
+                <label>
+                  时长
+                  <input id="durationInput" name="duration" type="number" min="1" max="600" placeholder="分钟" required />
+                </label>
+                <label>
+                  重量
+                  <input id="weightInput" name="weight" type="number" min="0" step="0.5" placeholder="kg" />
+                </label>
+                <label>
+                  组数
+                  <input id="setsInput" name="sets" type="number" min="0" max="200" placeholder="组" />
+                </label>
+              </div>
+
+              <div class="form-row two">
+                <label>
+                  次数/距离
+                  <input id="repsInput" name="reps" type="number" min="0" step="0.1" placeholder="次数或 km" />
+                </label>
+                <label>
+                  主练部位
+                  <select id="bodyInput" name="body">
+                    <option value="全身">全身</option>
+                    <option value="胸">胸</option>
+                    <option value="背">背</option>
+                    <option value="腿">腿</option>
+                    <option value="肩">肩</option>
+                    <option value="手臂">手臂</option>
+                    <option value="核心">核心</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                备注
+                <textarea id="notesInput" name="notes" rows="3" placeholder="体感、动作质量、下次要调整的点"></textarea>
+              </label>
+
+              <div class="form-actions">
+                <button id="resetBtn" class="secondary-btn" type="button">清空</button>
+                <button class="primary-btn" type="submit">保存记录</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="progress" class="panel chart-panel" aria-labelledby="progressTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">趋势</p>
+                <h2 id="progressTitle">最近 14 天训练量</h2>
+              </div>
+              <div class="segmented" role="group" aria-label="图表指标">
+                <button class="active" type="button" data-chart="duration">时长</button>
+                <button type="button" data-chart="volume">容量</button>
+              </div>
+            </div>
+            <div class="chart-summary" aria-label="图表摘要">
+              <div>
+                <span id="chartTotal">0</span>
+                <small id="chartUnit">分钟累计</small>
+              </div>
+              <div>
+                <span id="chartActiveDays">0</span>
+                <small>训练天数</small>
+              </div>
+              <div>
+                <span id="chartBest">0</span>
+                <small>单日最佳</small>
+              </div>
+            </div>
+            <div class="chart-stage">
+              <canvas id="trendChart" height="260" aria-label="训练趋势图"></canvas>
+            </div>
+            <div id="insightText" class="insight">添加训练后，这里会显示趋势。</div>
+          </section>
+        </div>
+
+        <section id="history" class="panel history-panel" aria-labelledby="historyTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">记录</p>
+              <h2 id="historyTitle">训练历史</h2>
+            </div>
+            <div class="filters">
+              <select id="filterType" aria-label="按训练类型筛选">
+                <option value="全部">全部类型</option>
+                <option value="力量">力量</option>
+                <option value="有氧">有氧</option>
+                <option value="拉伸">拉伸</option>
+                <option value="综合">综合</option>
+              </select>
+              <input id="searchInput" type="search" placeholder="搜索训练内容" aria-label="搜索训练内容" />
+            </div>
+          </div>
+          <div id="emptyState" class="empty-state">
+            <strong>还没有训练记录</strong>
+            <span>先添加一次训练，或者点“演示数据”看看效果。</span>
+          </div>
+          <div id="workoutList" class="workout-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="workoutTemplate">
+      <article class="workout-item">
+        <div class="workout-main">
+          <div class="type-badge"></div>
+          <div>
+            <div class="workout-title-line">
+              <h3></h3>
+              <span class="workout-date"></span>
+            </div>
+            <p class="workout-meta"></p>
+            <p class="workout-notes"></p>
+          </div>
+        </div>
+        <div class="workout-actions">
+          <button class="icon-btn edit-btn" type="button" title="编辑">✎</button>
+          <button class="icon-btn delete-btn" type="button" title="删除">×</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
